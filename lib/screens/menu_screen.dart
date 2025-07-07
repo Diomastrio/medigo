@@ -47,7 +47,7 @@ class MenuScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Bienvenido',
+                            'Administra tus',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -55,7 +55,7 @@ class MenuScreen extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            'Usuario',
+                            'Dosis y Medicamentos',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 20,
@@ -112,11 +112,7 @@ class MenuScreen extends StatelessWidget {
                 color: item['color'].withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
-                item['icon'],
-                color: item['color'],
-                size: 24,
-              ),
+              child: Icon(item['icon'], color: item['color'], size: 24),
             ),
             title: Text(
               item['label'],

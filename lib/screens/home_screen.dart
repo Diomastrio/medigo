@@ -174,11 +174,6 @@ class _HomeScreenState extends State<HomeScreen>
               ],
             ),
             SizedBox(height: 25),
-
-            // Administra tus dosis Section
-            _buildSectionHeader('Administra tus dosis', 'Ver todo'),
-            SizedBox(height: 15),
-            _buildAdminGrid(),
           ],
         ),
       ),
@@ -308,74 +303,6 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildAdminGrid() {
-    final List<Map<String, dynamic>> adminItems = [
-      {'icon': Icons.access_time, 'label': 'Diarias', 'color': Colors.black},
-      {'icon': Icons.notifications, 'label': 'Alertas', 'color': Colors.black},
-      {'icon': Icons.favorite, 'label': 'Recordatorios', 'color': Colors.black},
-      {'icon': Icons.check, 'label': 'Notificación', 'color': Colors.black},
-      {'icon': Icons.person, 'label': 'Farmacia', 'color': Colors.black},
-      {
-        'icon': Icons.monitor_heart,
-        'label': 'Medicamento',
-        'color': Colors.black,
-      },
-    ];
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 15,
-        mainAxisSpacing: 15,
-        childAspectRatio: 1,
-      ),
-      itemCount: adminItems.length,
-      itemBuilder: (context, index) {
-        final item = adminItems[index];
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                spreadRadius: 1,
-                blurRadius: 5,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Icon(item['icon'], color: item['color'], size: 20),
-              ),
-              SizedBox(height: 8),
-              Text(
-                item['label'],
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }
