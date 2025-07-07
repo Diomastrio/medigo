@@ -23,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen>
     _slideAnimation =
         Tween<double>(
           begin: 0.0,
-          end: 0.7, // Changed from 1 to 0.7 to match menu width
+          end: 1.0, // Change to 1.0 for full menu animation
         ).animate(
           CurvedAnimation(
             parent: _animationController,
@@ -55,35 +55,10 @@ class _HomeScreenState extends State<HomeScreen>
       backgroundColor: Colors.grey.shade50,
       body: Stack(
         children: [
-          // Main content
-          AnimatedBuilder(
-            animation: _slideAnimation,
-            builder: (context, child) {
-              return Transform.translate(
-                offset: Offset(
-                  _slideAnimation.value * MediaQuery.of(context).size.width,
-                  0,
-                ),
-                child: GestureDetector(
-                  onTap: _isMenuOpen ? _toggleMenu : null,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
-                      boxShadow: _isMenuOpen
-                          ? [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
-                                blurRadius: 10,
-                                offset: Offset(-5, 0),
-                              ),
-                            ]
-                          : [],
-                    ),
-                    child: _buildMainContent(),
-                  ),
-                ),
-              );
-            },
+          // Main content (stays in place)
+          GestureDetector(
+            onTap: _isMenuOpen ? _toggleMenu : null,
+            child: _buildMainContent(),
           ),
 
           // Menu overlay
@@ -91,8 +66,10 @@ class _HomeScreenState extends State<HomeScreen>
             animation: _slideAnimation,
             builder: (context, child) {
               return Positioned(
-                left: -MediaQuery.of(context).size.width * 0.7 + 
-                      (_slideAnimation.value * MediaQuery.of(context).size.width * 0.7),
+                left:
+                    -MediaQuery.of(context).size.width *
+                    0.7 *
+                    (1 - _slideAnimation.value),
                 top: 0,
                 bottom: 0,
                 width: MediaQuery.of(context).size.width * 0.7,
@@ -100,6 +77,8 @@ class _HomeScreenState extends State<HomeScreen>
               );
             },
           ),
+
+          // Dark overlay when menu is open
         ],
       ),
     );
