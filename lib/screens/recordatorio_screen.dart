@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../widgets/custom_time_picker.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
+import '../data/database_helper.dart';
+import '../data/models/medicine.dart';
 
 class CrearRecordatorioScreen extends StatefulWidget {
   @override
@@ -19,12 +21,42 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
   String durationType = "Días";
   int selectedIconIndex = 0;
 
+  // Add these new variables
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+  List<Medicine> _medicines = [];
+  bool _isLoadingMedicines = true;
+
   List<IconData> medicationIcons = [
     Icons.medication,
     Icons.local_pharmacy,
     Icons.health_and_safety,
     Icons.medical_services,
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMedicines();
+  }
+
+  Future<void> _loadMedicines() async {
+    try {
+      final medicines = await _dbHelper.getMedicines();
+      setState(() {
+        _medicines = medicines;
+        _isLoadingMedicines = false;
+        // Set the first medicine as default if available
+        if (_medicines.isNotEmpty) {
+          selectedMedication = _medicines.first.name;
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingMedicines = false;
+      });
+      print('Error loading medicines: $e');
+    }
+  }
 
   void _onNavTap(int index) {
     if (index == 0) {
@@ -126,15 +158,48 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
         SizedBox(height: 8),
         Container(
           width: double.infinity,
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           decoration: BoxDecoration(
             color: Colors.grey[200],
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Text(
-            selectedMedication,
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-          ),
+          child: _isLoadingMedicines
+              ? Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'Cargando medicamentos...',
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  ),
+                )
+              : _medicines.isEmpty
+              ? Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'No hay medicamentos disponibles',
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  ),
+                )
+              : DropdownButton<String>(
+                  value: selectedMedication,
+                  isExpanded: true,
+                  underline: Container(),
+                  items: _medicines.map((Medicine medicine) {
+                    return DropdownMenuItem<String>(
+                      value: medicine.name,
+                      child: Text(
+                        medicine.name,
+                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        selectedMedication = newValue;
+                      });
+                    }
+                  },
+                ),
         ),
       ],
     );
