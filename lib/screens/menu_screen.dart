@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'recordatorio_screen.dart'; // Add this import
+import 'farmacia_screen.dart';
 
 class MenuScreen extends StatelessWidget {
   final VoidCallback onMenuClose;
@@ -133,13 +134,17 @@ class MenuScreen extends StatelessWidget {
             onTap: () {
               // Handle menu item tap
               onMenuClose();
-              
+
               // Navigate to specific screens based on the selected item
               if (item['label'] == 'Recordatorios') {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => CrearRecordatorioScreen(),
                   ),
+                );
+              } else if (item['label'] == 'Farmacia') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => FarmaciaScreen()),
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(

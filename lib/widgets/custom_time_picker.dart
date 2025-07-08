@@ -12,8 +12,8 @@ class CustomTimePicker extends StatefulWidget {
     Key? key,
     required this.initialTime,
     required this.onTimeChanged,
-    this.selectedColor = const Color(0xFF4FC3F7),
-    this.unselectedColor = const Color(0xFF9E9E9E),
+    this.selectedColor = Colors.blue,
+    this.unselectedColor = Colors.grey,
     this.itemHeight = 60.0,
     this.visibleItemCount = 3,
   }) : super(key: key);
@@ -66,7 +66,7 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
       _selectedHour = newTime.hour;
       _selectedMinute = newTime.minute;
     });
-    
+
     // Update the scroll controllers to reflect the new time
     _hourController.animateToItem(
       _selectedHour,
@@ -78,7 +78,7 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
       duration: Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
-    
+
     widget.onTimeChanged(newTime);
   }
 
@@ -130,15 +130,18 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
             ],
           ),
         ),
-        
+
         SizedBox(height: 16),
-        
+
         // Alternative: Tap to open native time picker
         TextButton(
           onPressed: () async {
             final TimeOfDay? picked = await showTimePicker(
               context: context,
-              initialTime: TimeOfDay(hour: _selectedHour, minute: _selectedMinute),
+              initialTime: TimeOfDay(
+                hour: _selectedHour,
+                minute: _selectedMinute,
+              ),
             );
             if (picked != null) {
               _updateFromNativePicker(picked);
@@ -146,10 +149,7 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
           },
           child: Text(
             'O toca aquí para seleccionar tiempo',
-            style: TextStyle(
-              color: Colors.blue[600],
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.green, fontSize: 14),
           ),
         ),
       ],
@@ -383,8 +383,8 @@ class _SimpleTimePickerState extends State<SimpleTimePicker> {
         });
         widget.onTimeChanged(time);
       },
-      selectedColor: Colors.blue[400]!,
-      unselectedColor: Colors.grey[600]!,
+      selectedColor: Colors.blue!,
+      unselectedColor: Colors.grey!,
     );
   }
 }
