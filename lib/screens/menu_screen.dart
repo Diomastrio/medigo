@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'recordatorio_screen.dart'; // Add this import
 
 class MenuScreen extends StatelessWidget {
   final VoidCallback onMenuClose;
@@ -28,10 +29,10 @@ class MenuScreen extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.red,
+                  color: Colors.blue,
                   borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(20),
-                    bottomRight: Radius.circular(20),
+                    bottomLeft: Radius.circular(12),
+                    bottomRight: Radius.circular(12),
                   ),
                 ),
                 child: Row(
@@ -39,7 +40,11 @@ class MenuScreen extends StatelessWidget {
                     CircleAvatar(
                       backgroundColor: Colors.white,
                       radius: 25,
-                      child: Icon(Icons.person, color: Colors.red, size: 30),
+                      child: Icon(
+                        Icons.add_circle,
+                        color: Colors.blue,
+                        size: 30,
+                      ),
                     ),
                     SizedBox(width: 15),
                     Expanded(
@@ -86,10 +91,8 @@ class MenuScreen extends StatelessWidget {
 
   Widget _buildMenuList(BuildContext context) {
     final List<Map<String, dynamic>> menuItems = [
-      {'icon': Icons.access_time, 'label': 'Diarias', 'color': Colors.red},
-      {'icon': Icons.notifications, 'label': 'Alertas', 'color': Colors.orange},
+      {'icon': Icons.access_time, 'label': 'Historial', 'color': Colors.red},
       {'icon': Icons.favorite, 'label': 'Recordatorios', 'color': Colors.pink},
-      {'icon': Icons.check, 'label': 'Notificación', 'color': Colors.green},
       {'icon': Icons.local_pharmacy, 'label': 'Farmacia', 'color': Colors.blue},
       {
         'icon': Icons.monitor_heart,
@@ -130,9 +133,19 @@ class MenuScreen extends StatelessWidget {
             onTap: () {
               // Handle menu item tap
               onMenuClose();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${item['label']} seleccionado')),
-              );
+              
+              // Navigate to specific screens based on the selected item
+              if (item['label'] == 'Recordatorios') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => CrearRecordatorioScreen(),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('${item['label']} seleccionado')),
+                );
+              }
             },
           ),
         );

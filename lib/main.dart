@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'MediGO',
-      theme: ThemeData(primarySwatch: Colors.red, fontFamily: 'Roboto'),
+      theme: ThemeData(primarySwatch: Colors.blue, fontFamily: 'Roboto'),
       home: AuthScreen(),
       debugShowCheckedModeBanner: false,
     );
@@ -135,11 +135,11 @@ class _AuthScreenState extends State<AuthScreen> {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(20),
                             child: Container(
-                              color: Colors.grey.shade300,
-                              child: Icon(
-                                Icons.medical_services,
-                                size: 100,
-                                color: Colors.grey.shade400,
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                  image: AssetImage('assets/images/pill.png'),
+                                  fit: BoxFit.cover,
+                                ),
                               ),
                             ),
                           ),
@@ -154,18 +154,6 @@ class _AuthScreenState extends State<AuthScreen> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Container(
-                                  padding: EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.orange,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Icon(
-                                    Icons.medical_services,
-                                    color: Colors.white,
-                                    size: 30,
-                                  ),
-                                ),
                                 SizedBox(height: 10),
                                 Text(
                                   'MediGO',
@@ -226,7 +214,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               ),
                               Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.red,
+                                  color: Colors.blue,
                                   shape: BoxShape.circle,
                                 ),
                                 child: IconButton(
@@ -322,7 +310,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             child: ElevatedButton(
                               onPressed: _handleSubmit,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
+                                backgroundColor: Colors.blue,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(25),
                                 ),
@@ -390,7 +378,7 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide(color: Colors.red, width: 2),
+          borderSide: BorderSide(color: Colors.blue, width: 2),
         ),
         contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       ),

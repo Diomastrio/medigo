@@ -97,12 +97,30 @@ class _HomeScreenState extends State<HomeScreen>
         title: Text(
           'MediGO',
           style: TextStyle(
-            color: Colors.red,
+            color: Colors.blue,
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
         ),
         actions: [
+          // Notifications icon
+          IconButton(
+            icon: Icon(Icons.notifications, color: Colors.orange),
+            onPressed: () {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Alertas seleccionado')));
+            },
+          ),
+          // Favorites/Reminders icon
+          IconButton(
+            icon: Icon(Icons.check, color: Colors.green),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Notificación seleccionado')),
+              );
+            },
+          ),
           Padding(
             padding: EdgeInsets.only(right: 15),
             child: CircleAvatar(
@@ -153,9 +171,9 @@ class _HomeScreenState extends State<HomeScreen>
             // Próximas dosis Section
             _buildSectionHeader('Próximas dosis', 'Ver todo'),
             SizedBox(height: 15),
-            _buildDoseCard('Medicamento diario', 'Confirmar', Colors.red),
+            _buildDoseCard('Medicamento diario', 'Confirmar', Colors.blue),
             SizedBox(height: 10),
-            _buildDoseCard('Analgesico', 'Confirmar', Colors.red),
+            _buildDoseCard('Analgesico', 'Confirmar', Colors.blue),
             SizedBox(height: 25),
 
             // Medicamentos Actuales Section
@@ -179,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen>
       ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,
-        selectedItemColor: Colors.red,
+        selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         items: [
