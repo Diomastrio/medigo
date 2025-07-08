@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/custom_time_picker.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
+import '../widgets/dosis_section_widget.dart';
 import '../data/database_helper.dart';
 import '../data/models/medicine.dart';
 
@@ -14,7 +15,8 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
   TimeOfDay selectedTime = TimeOfDay(hour: 7, minute: 0);
   String selectedMedication = "Aspirina 100mg";
   int dosisCount = 2;
-  String dosisType = "Tabletas";
+  String dosisUnit = "mg"; // Changed from dosisType to dosisUnit
+  String dosisType = "Tablets"; // This will be the medication form
   bool afterMeal1 = true;
   bool afterMeal2 = true;
   int duration = 14;
@@ -26,12 +28,9 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
   List<Medicine> _medicines = [];
   bool _isLoadingMedicines = true;
 
-  List<IconData> medicationIcons = [
-    Icons.medication,
-    Icons.local_pharmacy,
-    Icons.health_and_safety,
-    Icons.medical_services,
-  ];
+  // Add dropdown options
+  final List<String> dosisUnits = ["mg", "ml", "units", "puffs", "patch"];
+  final List<String> dosisTypes = ["Tableta", "Capsulas" "Liquido", "Inhalers", "Transdermal patch"];
 
   @override
   void initState() {
@@ -108,7 +107,28 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
             SizedBox(height: 24),
 
             // Dosis Section
-            _buildDosisSection(),
+            DosisSectionWidget(
+              dosisCount: dosisCount,
+              dosisUnit: dosisUnit,
+              dosisType: dosisType,
+              dosisUnits: dosisUnits,
+              dosisTypes: dosisTypes,
+              onDosisCountChanged: (newCount) {
+                setState(() {
+                  dosisCount = newCount;
+                });
+              },
+              onDosisUnitChanged: (newUnit) {
+                setState(() {
+                  dosisUnit = newUnit;
+                });
+              },
+              onDosisTypeChanged: (newType) {
+                setState(() {
+                  dosisType = newType;
+                });
+              },
+            ),
             SizedBox(height: 24),
 
             // Cuando Section
@@ -118,10 +138,6 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
             // Duration Section
             _buildDurationSection(),
             SizedBox(height: 24),
-
-            // Icon Selection
-            _buildIconSection(),
-            SizedBox(height: 32),
 
             // Save Button
             _buildSaveButton(),
@@ -200,58 +216,6 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
                     }
                   },
                 ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDosisSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Dosis',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-        ),
-        SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              flex: 1,
-              child: Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  dosisCount.toString(),
-                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                ),
-              ),
-            ),
-            SizedBox(width: 12),
-            Expanded(
-              flex: 2,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      dosisType,
-                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                    ),
-                    Icon(Icons.keyboard_arrow_down, color: Colors.grey[600]),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ),
       ],
     );
@@ -367,48 +331,6 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
               ),
             ),
           ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildIconSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Seleccionar icono',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-        ),
-        SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: List.generate(4, (index) {
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  selectedIconIndex = index;
-                });
-              },
-              child: Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: selectedIconIndex == index
-                      ? Colors.blue[200]
-                      : Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  medicationIcons[index],
-                  size: 30,
-                  color: selectedIconIndex == index
-                      ? Colors.blue[700]
-                      : Colors.grey[600],
-                ),
-              ),
-            );
-          }),
         ),
       ],
     );
