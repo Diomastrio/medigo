@@ -56,11 +56,11 @@ class _HomeScreenState extends State<HomeScreen>
       _currentNavIndex = index;
     });
     // Handle navigation logic here
-    if (index == 1) {
+    if (index == 2) {
       // Navigate to profile or other screen
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Perfil seleccionado')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Perfil seleccionado')));
     }
   }
 

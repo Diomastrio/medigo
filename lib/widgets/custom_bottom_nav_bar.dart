@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:medigo/screens/recordatorio_screen.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int)? onTap;
 
-  const CustomBottomNavBar({
-    Key? key,
-    this.currentIndex = 0,
-    this.onTap,
-  }) : super(key: key);
+  const CustomBottomNavBar({Key? key, this.currentIndex = 0, this.onTap})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -38,11 +36,37 @@ class CustomBottomNavBar extends StatelessWidget {
             ),
           ),
           GestureDetector(
-            onTap: () => onTap?.call(1),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CrearRecordatorioScreen(),
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.3),
+                    spreadRadius: 1,
+                    blurRadius: 5,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(Icons.add, size: 32, color: Colors.white),
+            ),
+          ),
+          GestureDetector(
+            onTap: () => onTap?.call(2),
             child: Icon(
               Icons.person,
               size: 28,
-              color: currentIndex == 1 ? Colors.blue : Colors.grey[600],
+              color: currentIndex == 2 ? Colors.blue : Colors.grey[600],
             ),
           ),
         ],

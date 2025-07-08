@@ -18,7 +18,6 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
   int duration = 14;
   String durationType = "Días";
   int selectedIconIndex = 0;
-  int _currentNavIndex = 0;
 
   List<IconData> medicationIcons = [
     Icons.medication,
@@ -28,15 +27,16 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
   ];
 
   void _onNavTap(int index) {
-    setState(() {
-      _currentNavIndex = index;
-    });
     if (index == 0) {
-      Navigator.of(context).pop(); // Go back to home
-    } else if (index == 1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Perfil seleccionado')),
-      );
+      Navigator.of(
+        context,
+      ).popUntil((route) => route.isFirst); // Go back to home
+    } else if (index == 2) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Perfil seleccionado')));
+      // You might want to navigate to a ProfileScreen here
+      // Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen()));
     }
   }
 
@@ -98,7 +98,7 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
         ),
       ),
       bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: _currentNavIndex,
+        currentIndex: -1, // No item is selected
         onTap: _onNavTap,
       ),
     );
