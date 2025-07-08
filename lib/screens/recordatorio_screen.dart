@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/custom_time_picker.dart';
+import '../widgets/custom_bottom_nav_bar.dart';
 
 class CrearRecordatorioScreen extends StatefulWidget {
   @override
@@ -17,6 +18,7 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
   int duration = 14;
   String durationType = "Días";
   int selectedIconIndex = 0;
+  int _currentNavIndex = 0;
 
   List<IconData> medicationIcons = [
     Icons.medication,
@@ -24,6 +26,19 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
     Icons.health_and_safety,
     Icons.medical_services,
   ];
+
+  void _onNavTap(int index) {
+    setState(() {
+      _currentNavIndex = index;
+    });
+    if (index == 0) {
+      Navigator.of(context).pop(); // Go back to home
+    } else if (index == 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Perfil seleccionado')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +97,10 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
+      bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: _currentNavIndex,
+        onTap: _onNavTap,
+      ),
     );
   }
 
@@ -357,31 +375,6 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
             color: Colors.white,
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNavBar() {
-    return Container(
-      height: 80,
-      padding: EdgeInsets.symmetric(horizontal: 32),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Icon(Icons.home, size: 28, color: Colors.grey[600]),
-          Icon(Icons.person, size: 28, color: Colors.grey[600]),
-        ],
       ),
     );
   }

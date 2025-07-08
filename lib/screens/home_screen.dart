@@ -1,6 +1,7 @@
 import '../main.dart'; // Import the main.dart file for AuthScreen
 import 'package:flutter/material.dart';
 import 'menu_screen.dart'; // Import the new menu screen
+import '../widgets/custom_bottom_nav_bar.dart'; // Import the custom bottom nav bar
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -12,6 +13,7 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _animationController;
   late Animation<double> _slideAnimation;
   bool _isMenuOpen = false;
+  int _currentNavIndex = 0;
 
   @override
   void initState() {
@@ -47,6 +49,19 @@ class _HomeScreenState extends State<HomeScreen>
         _animationController.reverse();
       }
     });
+  }
+
+  void _onNavTap(int index) {
+    setState(() {
+      _currentNavIndex = index;
+    });
+    // Handle navigation logic here
+    if (index == 1) {
+      // Navigate to profile or other screen
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Perfil seleccionado')),
+      );
+    }
   }
 
   @override
@@ -195,15 +210,9 @@ class _HomeScreenState extends State<HomeScreen>
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
-        ],
+      bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: _currentNavIndex,
+        onTap: _onNavTap,
       ),
     );
   }
