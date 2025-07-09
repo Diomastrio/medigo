@@ -6,6 +6,7 @@ import '../widgets/when_section_widget.dart';
 import '../widgets/duration_section_widget.dart';
 import '../data/database_helper.dart';
 import '../data/models/medicine.dart';
+import '../data/models/reminder.dart';
 
 class CrearRecordatorioScreen extends StatefulWidget {
   @override
@@ -279,10 +280,26 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
-        onPressed: () {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Recordatorio guardado')));
+        onPressed: () async {
+          final newReminder = Reminder(
+            medicineName: selectedMedication,
+            time: "${selectedTime.hour}:${selectedTime.minute}",
+            doseCount: dosisCount,
+            doseUnit: dosisUnit,
+            doseType: dosisType,
+            timing: selectedTiming?.toString().split('.').last,
+            duration: duration,
+            durationType: durationType,
+          );
+
+          await _dbHelper.insertReminder(newReminder);
+
+          if (mounted) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Recordatorio guardado')));
+            Navigator.pop(context);
+          }
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.blue[600],

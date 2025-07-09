@@ -2,6 +2,8 @@ import '../main.dart'; // Import the main.dart file for AuthScreen
 import 'package:flutter/material.dart';
 import 'menu_screen.dart'; // Import the new menu screen
 import '../widgets/custom_bottom_nav_bar.dart'; // Import the custom bottom nav bar
+import '../data/database_helper.dart';
+import '../data/models/reminder.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -14,10 +16,13 @@ class _HomeScreenState extends State<HomeScreen>
   late Animation<double> _slideAnimation;
   bool _isMenuOpen = false;
   int _currentNavIndex = 0;
+  List<Reminder> _reminders = [];
+  final DatabaseHelper _dbHelper = DatabaseHelper();
 
   @override
   void initState() {
     super.initState();
+    _loadReminders();
     _animationController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 300),
@@ -38,6 +43,23 @@ class _HomeScreenState extends State<HomeScreen>
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _loadReminders();
+  }
+
+  void _loadReminders() async {
+    var reminders = await _dbHelper.getReminders();
+    // A simple way to trigger a rebuild when returning to the screen
+    // after adding a new reminder.
+    if (mounted) {
+      setState(() {
+        _reminders = reminders;
+      });
+    }
   }
 
   void _toggleMenu() {
@@ -186,9 +208,21 @@ class _HomeScreenState extends State<HomeScreen>
             // Próximas dosis Section
             _buildSectionHeader('Próximas dosis', 'Ver todo'),
             SizedBox(height: 15),
-            _buildDoseCard('Medicamento diario', 'Confirmar', Colors.blue),
-            SizedBox(height: 10),
-            _buildDoseCard('Analgesico', 'Confirmar', Colors.blue),
+            _reminders.isEmpty
+                ? Center(child: Text('No hay recordatorios.'))
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: _reminders.length,
+                    itemBuilder: (context, index) {
+                      final reminder = _reminders[index];
+                      return _buildDoseCard(
+                        reminder.medicineName,
+                        'Confirmar',
+                        Colors.blue,
+                      );
+                    },
+                  ),
             SizedBox(height: 25),
 
             // Medicamentos Actuales Section

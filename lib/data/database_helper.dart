@@ -1,6 +1,7 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'models/medicine.dart';
+import 'models/reminder.dart'; // Import the new model
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -19,7 +20,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'medicine.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 2, // Increment version
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE medicines(
@@ -27,9 +28,31 @@ class DatabaseHelper {
             name TEXT
           )
         ''');
+        await _createRemindersTable(db); // Call create for new table
         await _seedDatabase(db);
       },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await _createRemindersTable(db);
+        }
+      },
     );
+  }
+
+  Future<void> _createRemindersTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE reminders(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        medicineName TEXT,
+        time TEXT,
+        doseCount INTEGER,
+        doseUnit TEXT,
+        doseType TEXT,
+        timing TEXT,
+        duration INTEGER,
+        durationType TEXT
+      )
+    ''');
   }
 
   Future<void> _seedDatabase(Database db) async {
@@ -72,5 +95,23 @@ class DatabaseHelper {
   Future<void> deleteMedicine(int id) async {
     final db = await database;
     await db.delete('medicines', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<Reminder>> getReminders() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('reminders');
+    return List.generate(maps.length, (i) {
+      return Reminder.fromMap(maps[i]);
+    });
+  }
+
+  // Add new method to insert a reminder
+  Future<void> insertReminder(Reminder reminder) async {
+    final db = await database;
+    await db.insert(
+      'reminders',
+      reminder.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 }
