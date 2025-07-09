@@ -14,10 +14,7 @@ class DurationSectionWidget extends StatelessWidget {
     required this.onDurationTypeChanged,
   }) : super(key: key);
 
-  final List<String> durationTypes = const [
-    "Días",
-    "Semanas",
-  ];
+  final List<String> durationTypes = const ["Días", "Semanas"];
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +31,7 @@ class DurationSectionWidget extends StatelessWidget {
             Expanded(
               flex: 1,
               child: Container(
-                padding: EdgeInsets.all(16),
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(12),

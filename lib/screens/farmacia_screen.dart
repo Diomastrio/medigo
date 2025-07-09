@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/database_helper.dart';
 import '../../data/models/medicine.dart';
+import '../widgets/custom_bottom_nav_bar.dart';
 
 void main() {
   runApp(const MyApp());
@@ -82,6 +83,22 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
                 ),
                 child: Row(
                   children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back_ios,
+                          color: Colors.black87,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -355,6 +372,7 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
           ),
         ),
       ),
+      bottomNavigationBar: const CustomBottomNavBar(currentIndex: 1),
     );
   }
 }
