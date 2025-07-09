@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../widgets/custom_time_picker.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
 import '../widgets/dosis_section_widget.dart';
+import '../widgets/when_section_widget.dart';
+import '../widgets/duration_section_widget.dart';
 import '../data/database_helper.dart';
 import '../data/models/medicine.dart';
 
@@ -15,22 +17,40 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
   TimeOfDay selectedTime = TimeOfDay(hour: 7, minute: 0);
   String selectedMedication = "Aspirina 100mg";
   int dosisCount = 2;
-  String dosisUnit = "mg"; // Changed from dosisType to dosisUnit
-  String dosisType = "Tablets"; // This will be the medication form
-  bool afterMeal1 = true;
-  bool afterMeal2 = true;
+  String dosisUnit = "mg";
+  String dosisType = "Tableta";
+  MedicationTiming? selectedTiming = MedicationTiming.emptyStomach;
   int duration = 14;
   String durationType = "Días";
   int selectedIconIndex = 0;
 
-  // Add these new variables
   final DatabaseHelper _dbHelper = DatabaseHelper();
   List<Medicine> _medicines = [];
   bool _isLoadingMedicines = true;
 
-  // Add dropdown options
-  final List<String> dosisUnits = ["mg", "ml", "units", "puffs", "patch"];
-  final List<String> dosisTypes = ["Tableta", "Capsulas" "Liquido", "Inhalers", "Transdermal patch"];
+  final List<String> dosisUnits = [
+    "mg",
+    "ml",
+    "unidades",
+    "inhalaciones",
+    "parche",
+  ];
+  final List<String> dosisTypes = [
+    "Tableta",
+    "Cápsula",
+    "Líquido",
+    "Inhalador",
+    "Parche transdérmico",
+  ];
+
+  // Mapping of medication forms to their suggested units
+  final Map<String, String> _dosisTypeToUnitMap = {
+    "Tableta": "mg",
+    "Cápsula": "mg",
+    "Líquido": "ml",
+    "Inhalador": "inhalaciones",
+    "Parche transdérmico": "parche",
+  };
 
   @override
   void initState() {
@@ -44,7 +64,6 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
       setState(() {
         _medicines = medicines;
         _isLoadingMedicines = false;
-        // Set the first medicine as default if available
         if (_medicines.isNotEmpty) {
           selectedMedication = _medicines.first.name;
         }
@@ -57,17 +76,23 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
     }
   }
 
+  void _onDosisTypeChanged(String newType) {
+    setState(() {
+      dosisType = newType;
+      // Automatically suggest the appropriate unit based on the medication form
+      if (_dosisTypeToUnitMap.containsKey(newType)) {
+        dosisUnit = _dosisTypeToUnitMap[newType]!;
+      }
+    });
+  }
+
   void _onNavTap(int index) {
     if (index == 0) {
-      Navigator.of(
-        context,
-      ).popUntil((route) => route.isFirst); // Go back to home
+      Navigator.of(context).popUntil((route) => route.isFirst);
     } else if (index == 2) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Perfil seleccionado')));
-      // You might want to navigate to a ProfileScreen here
-      // Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen()));
     }
   }
 
@@ -123,20 +148,36 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
                   dosisUnit = newUnit;
                 });
               },
-              onDosisTypeChanged: (newType) {
+              onDosisTypeChanged: _onDosisTypeChanged,
+            ),
+            SizedBox(height: 24),
+
+            // When Section
+            WhenSectionWidget(
+              selectedTiming: selectedTiming,
+              onTimingChanged: (MedicationTiming? newTiming) {
                 setState(() {
-                  dosisType = newType;
+                  selectedTiming = newTiming;
                 });
               },
             ),
             SizedBox(height: 24),
 
-            // Cuando Section
-            _buildWhenSection(),
-            SizedBox(height: 24),
-
             // Duration Section
-            _buildDurationSection(),
+            DurationSectionWidget(
+              duration: duration,
+              durationType: durationType,
+              onDurationChanged: (newDuration) {
+                setState(() {
+                  duration = newDuration;
+                });
+              },
+              onDurationTypeChanged: (newType) {
+                setState(() {
+                  durationType = newType;
+                });
+              },
+            ),
             SizedBox(height: 24),
 
             // Save Button
@@ -221,128 +262,12 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
     );
   }
 
-  Widget _buildWhenSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Cuando',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-        ),
-        SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: Row(
-                children: [
-                  Checkbox(
-                    value: afterMeal1,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        afterMeal1 = value ?? false;
-                      });
-                    },
-                    activeColor: Colors.green,
-                  ),
-                  Expanded(
-                    child: Text(
-                      'Después de la comida',
-                      style: TextStyle(fontSize: 14),
-                      overflow: TextOverflow.visible,
-                      softWrap: true,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Row(
-                children: [
-                  Checkbox(
-                    value: afterMeal2,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        afterMeal2 = value ?? false;
-                      });
-                    },
-                    activeColor: Colors.green,
-                  ),
-                  Expanded(
-                    child: Text(
-                      'Después de la comida',
-                      style: TextStyle(fontSize: 14),
-                      overflow: TextOverflow.visible,
-                      softWrap: true,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDurationSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Duración',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-        ),
-        SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              flex: 1,
-              child: Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  duration.toString(),
-                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                ),
-              ),
-            ),
-            SizedBox(width: 12),
-            Expanded(
-              flex: 2,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      durationType,
-                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                    ),
-                    Icon(Icons.keyboard_arrow_down, color: Colors.grey[600]),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget _buildSaveButton() {
     return SizedBox(
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
         onPressed: () {
-          // Handle save functionality
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text('Recordatorio guardado')));
