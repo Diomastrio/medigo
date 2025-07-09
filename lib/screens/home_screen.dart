@@ -2,8 +2,10 @@ import '../main.dart'; // Import the main.dart file for AuthScreen
 import 'package:flutter/material.dart';
 import 'menu_screen.dart'; // Import the new menu screen
 import '../widgets/custom_bottom_nav_bar.dart'; // Import the custom bottom nav bar
+import '../widgets/medicine_card.dart'; // Import the new medicine card widget
 import '../data/database_helper.dart';
 import '../data/models/reminder.dart';
+import 'confirmation_screen.dart'; // Import the new confirmation screen
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -216,11 +218,7 @@ class _HomeScreenState extends State<HomeScreen>
                     itemCount: _reminders.length,
                     itemBuilder: (context, index) {
                       final reminder = _reminders[index];
-                      return _buildDoseCard(
-                        reminder.medicineName,
-                        'Confirmar',
-                        Colors.blue,
-                      );
+                      return _buildDoseCard(reminder, 'Confirmar', Colors.blue);
                     },
                   ),
             SizedBox(height: 25),
@@ -228,18 +226,8 @@ class _HomeScreenState extends State<HomeScreen>
             // Medicamentos Actuales Section
             _buildSectionHeader('Medicamentos Actuales', 'Ver todo'),
             SizedBox(height: 15),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildMedicineCard('Ibuprofeno', Icons.circle, Colors.black),
-                _buildMedicineCard('Aspirina', Icons.medication, Colors.black),
-                _buildMedicineCard(
-                  'Lisinopril',
-                  Icons.local_hospital,
-                  Colors.black,
-                ),
-              ],
-            ),
+            // Replace the old Row with the new MedicineCard widget
+            MedicineCard(),
             SizedBox(height: 25),
           ],
         ),
@@ -271,8 +259,9 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildDoseCard(String medication, String action, Color actionColor) {
+  Widget _buildDoseCard(Reminder reminder, String action, Color actionColor) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 12),
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -300,7 +289,7 @@ class _HomeScreenState extends State<HomeScreen>
           SizedBox(width: 15),
           Expanded(
             child: Text(
-              medication,
+              reminder.medicineName,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -309,7 +298,14 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ConfirmationScreen(reminder: reminder),
+                ),
+              );
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: actionColor,
               foregroundColor: Colors.white,
@@ -319,48 +315,6 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
             child: Text(action, style: TextStyle(fontSize: 14)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMedicineCard(String name, IconData icon, Color iconColor) {
-    return Container(
-      width: 100,
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(25),
-            ),
-            child: Icon(icon, color: iconColor, size: 25),
-          ),
-          SizedBox(height: 10),
-          Text(
-            name,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
-            ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),

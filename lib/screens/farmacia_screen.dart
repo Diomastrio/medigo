@@ -27,6 +27,7 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   final TextEditingController _textController = TextEditingController();
   late Future<List<Medicine>> _medicines;
+  int _currentNavIndex = 1; // Set to 1 for farmacia screen
 
   @override
   void initState() {
@@ -51,6 +52,23 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
   void _deleteMedicine(int id) async {
     await _dbHelper.deleteMedicine(id);
     _refreshMedicineList();
+  }
+
+  void _onNavTap(int index) {
+    setState(() {
+      _currentNavIndex = index;
+    });
+
+    // Handle navigation
+    if (index == 0) {
+      // Navigate to home screen
+      Navigator.pop(context);
+    } else if (index == 2) {
+      // Navigate to profile or other screen
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Perfil seleccionado')));
+    }
   }
 
   @override
@@ -372,7 +390,10 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: const CustomBottomNavBar(currentIndex: 1),
+      bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: _currentNavIndex,
+        onTap: _onNavTap,
+      ),
     );
   }
 }
