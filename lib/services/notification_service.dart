@@ -1,3 +1,5 @@
+import 'dart:convert'; // Import dart:convert
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
@@ -45,6 +47,49 @@ class NotificationService {
   void _onNotificationTapped(NotificationResponse response) {
     // Handle notification tap - you can navigate to confirmation screen here
     print('Notification tapped: ${response.payload}');
+
+    if (response.actionId == 'snooze_action' && response.payload != null) {
+      final reminderMap = jsonDecode(response.payload!);
+      final reminder = Reminder.fromMap(reminderMap);
+      _scheduleSnoozedNotification(reminder);
+    }
+  }
+
+  Future<void> _scheduleSnoozedNotification(Reminder reminder) async {
+    const androidDetails = AndroidNotificationDetails(
+      'medicine_reminders',
+      'Medicine Reminders',
+      channelDescription: 'Notifications for medicine reminders',
+      importance: Importance.high,
+      priority: Priority.high,
+      showWhen: true,
+      icon: '@mipmap/ic_launcher',
+      actions: <AndroidNotificationAction>[
+        AndroidNotificationAction('snooze_action', 'Snooze 5 min'),
+      ],
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notifications.zonedSchedule(
+      reminder.id ?? 0, // Use the same ID to replace the original
+      'Tiempo de tomar tu medicamento',
+      '${reminder.medicineName} - ${reminder.doseCount} ${reminder.doseType}',
+      tz.TZDateTime.now(tz.local).add(const Duration(minutes: 5)),
+      notificationDetails,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      payload: jsonEncode(reminder.toMap()), // Pass reminder data
+    );
   }
 
   Future<void> scheduleReminderNotification(Reminder reminder) async {
@@ -70,6 +115,9 @@ class NotificationService {
       priority: Priority.high,
       showWhen: true,
       icon: '@mipmap/ic_launcher',
+      actions: <AndroidNotificationAction>[
+        AndroidNotificationAction('snooze_action', 'Snooze 5 min'),
+      ],
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -92,7 +140,7 @@ class NotificationService {
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time, // Repeat daily
-      payload: reminder.id.toString(),
+      payload: jsonEncode(reminder.toMap()),
     );
   }
 

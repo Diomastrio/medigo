@@ -213,15 +213,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ).showSnackBar(SnackBar(content: Text('Alertas seleccionado')));
               },
             ),
-            // Favorites/Reminders icon
-            IconButton(
-              icon: Icon(Icons.check, color: Colors.green),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Notificación seleccionado')),
-                );
-              },
-            ),
+
             Padding(
               padding: EdgeInsets.only(right: 15),
               child: CircleAvatar(
