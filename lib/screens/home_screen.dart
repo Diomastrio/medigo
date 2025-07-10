@@ -135,6 +135,22 @@ class _HomeScreenState extends State<HomeScreen>
             child: _buildMainContent(),
           ),
 
+          // Dark overlay when menu is open
+          if (_isMenuOpen)
+            AnimatedBuilder(
+              animation: _slideAnimation,
+              builder: (context, child) {
+                return GestureDetector(
+                  onTap: _toggleMenu,
+                  child: Container(
+                    color: Colors.black.withOpacity(
+                      0.5 * _slideAnimation.value,
+                    ),
+                  ),
+                );
+              },
+            ),
+
           // Menu overlay
           AnimatedBuilder(
             animation: _slideAnimation,
@@ -151,8 +167,6 @@ class _HomeScreenState extends State<HomeScreen>
               );
             },
           ),
-
-          // Dark overlay when menu is open
         ],
       ),
     );
@@ -469,7 +483,6 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
           ),
-          Icon(Icons.arrow_forward_ios, color: Colors.grey.shade400, size: 16),
         ],
       ),
     );
