@@ -5,7 +5,10 @@ import '../widgets/custom_bottom_nav_bar.dart'; // Import the custom bottom nav 
 import '../widgets/medicine_card.dart'; // Import the new medicine card widget
 import '../data/database_helper.dart';
 import '../data/models/reminder.dart';
+import '../data/models/medicine.dart';
+import '../services/search_service.dart'; // Import the search service
 import 'confirmation_screen.dart'; // Import the new confirmation screen
+import 'recordatorio_screen.dart'; // Make sure this import exists
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -19,30 +22,31 @@ class _HomeScreenState extends State<HomeScreen>
   bool _isMenuOpen = false;
   int _currentNavIndex = 0;
   List<Reminder> _reminders = [];
+  List<Reminder> _filteredReminders = [];
+  List<Medicine> _medicines = [];
+  List<Medicine> _filteredMedicines = [];
   final DatabaseHelper _dbHelper = DatabaseHelper();
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadReminders();
+    _loadMedicines();
+    _searchController.addListener(_onSearchChanged);
     _animationController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 300),
     );
-    _slideAnimation =
-        Tween<double>(
-          begin: 0.0,
-          end: 1.0, // Change to 1.0 for full menu animation
-        ).animate(
-          CurvedAnimation(
-            parent: _animationController,
-            curve: Curves.easeInOut,
-          ),
-        );
+    _slideAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
   }
 
   @override
   void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -51,17 +55,42 @@ class _HomeScreenState extends State<HomeScreen>
   void didUpdateWidget(HomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     _loadReminders();
+    _loadMedicines();
   }
 
   void _loadReminders() async {
     var reminders = await _dbHelper.getReminders();
-    // A simple way to trigger a rebuild when returning to the screen
-    // after adding a new reminder.
     if (mounted) {
       setState(() {
         _reminders = reminders;
+        _onSearchChanged();
       });
     }
+  }
+
+  void _loadMedicines() async {
+    var medicines = await _dbHelper.getMedicines();
+    if (mounted) {
+      setState(() {
+        _medicines = medicines;
+        _onSearchChanged();
+      });
+    }
+  }
+
+  void _onSearchChanged() {
+    final searchTerm = _searchController.text;
+
+    setState(() {
+      _filteredReminders = SearchService.filterReminders(
+        _reminders,
+        searchTerm,
+      );
+      _filteredMedicines = SearchService.filterMedicines(
+        _medicines,
+        searchTerm,
+      );
+    });
   }
 
   void _toggleMenu() {
@@ -79,13 +108,19 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() {
       _currentNavIndex = index;
     });
-    // Handle navigation logic here
     if (index == 2) {
-      // Navigate to profile or other screen
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Perfil seleccionado')));
     }
+  }
+
+  void _deleteReminder(int id) async {
+    await _dbHelper.deleteReminder(id);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Recordatorio eliminado')));
+    _loadReminders();
   }
 
   @override
@@ -124,117 +159,156 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildMainContent() {
-    return Scaffold(
-      backgroundColor: Colors.grey.shade50,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.menu, color: Colors.black),
-          onPressed: _toggleMenu,
-        ),
-        title: Text(
-          'MediGO',
-          style: TextStyle(
-            color: Colors.blue,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
+        backgroundColor: Colors.grey.shade50,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.menu, color: Colors.black),
+            onPressed: _toggleMenu,
           ),
-        ),
-        actions: [
-          // Notifications icon
-          IconButton(
-            icon: Icon(Icons.notifications, color: Colors.orange),
-            onPressed: () {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('Alertas seleccionado')));
-            },
-          ),
-          // Favorites/Reminders icon
-          IconButton(
-            icon: Icon(Icons.check, color: Colors.green),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Notificación seleccionado')),
-              );
-            },
-          ),
-          Padding(
-            padding: EdgeInsets.only(right: 15),
-            child: CircleAvatar(
-              backgroundColor: Colors.grey.shade300,
-              child: Icon(Icons.person, color: Colors.grey.shade600),
+          title: Text(
+            'MediGO',
+            style: TextStyle(
+              color: Colors.blue,
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
             ),
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Search Bar
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 5,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.search, color: Colors.grey.shade600),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Buscar medicamentos, recordatorios...',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ],
+          actions: [
+            // Notifications icon
+            IconButton(
+              icon: Icon(Icons.notifications, color: Colors.orange),
+              onPressed: () {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('Alertas seleccionado')));
+              },
+            ),
+            // Favorites/Reminders icon
+            IconButton(
+              icon: Icon(Icons.check, color: Colors.green),
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Notificación seleccionado')),
+                );
+              },
+            ),
+            Padding(
+              padding: EdgeInsets.only(right: 15),
+              child: CircleAvatar(
+                backgroundColor: Colors.grey.shade300,
+                child: Icon(Icons.person, color: Colors.grey.shade600),
               ),
             ),
-            SizedBox(height: 25),
-
-            // Próximas dosis Section
-            _buildSectionHeader('Próximas dosis', 'Ver todo'),
-            SizedBox(height: 15),
-            _reminders.isEmpty
-                ? Center(child: Text('No hay recordatorios.'))
-                : ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: _reminders.length,
-                    itemBuilder: (context, index) {
-                      final reminder = _reminders[index];
-                      return _buildDoseCard(reminder, 'Confirmar', Colors.blue);
-                    },
-                  ),
-            SizedBox(height: 25),
-
-            // Medicamentos Actuales Section
-            _buildSectionHeader('Medicamentos Actuales', 'Ver todo'),
-            SizedBox(height: 15),
-            // Replace the old Row with the new MedicineCard widget
-            MedicineCard(),
-            SizedBox(height: 25),
           ],
         ),
-      ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: _onNavTap,
+        body: SingleChildScrollView(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Search Bar
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 5,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.search, color: Colors.grey.shade600),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Buscar medicamentos, recordatorios...',
+                          hintStyle: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 16,
+                          ),
+                          border: InputBorder.none,
+                        ),
+                        style: TextStyle(color: Colors.black, fontSize: 16),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 25),
+
+              // Próximas dosis Section
+              _buildSectionHeader('Próximas dosis', 'Ver todo'),
+              SizedBox(height: 15),
+              _filteredReminders.isEmpty
+                  ? Center(
+                      child: Text(
+                        SearchService.getEmptyMessage(
+                          _reminders,
+                          _searchController.text,
+                          'recordatorios',
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: _filteredReminders.length,
+                      itemBuilder: (context, index) {
+                        final reminder = _filteredReminders[index];
+                        return _buildDoseCard(
+                          reminder,
+                          'Confirmar',
+                          Colors.blue,
+                        );
+                      },
+                    ),
+              SizedBox(height: 25),
+
+              // Medicamentos Actuales Section
+              _buildSectionHeader('Medicamentos Actuales', 'Ver todo'),
+              SizedBox(height: 15),
+              _filteredMedicines.isEmpty
+                  ? Center(
+                      child: Text(
+                        SearchService.getEmptyMessage(
+                          _medicines,
+                          _searchController.text,
+                          'medicamentos',
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: _filteredMedicines.length,
+                      itemBuilder: (context, index) {
+                        final medicine = _filteredMedicines[index];
+                        return _buildMedicineCard(medicine);
+                      },
+                    ),
+              SizedBox(height: 25),
+            ],
+          ),
+        ),
+        bottomNavigationBar: CustomBottomNavBar(
+          currentIndex: _currentNavIndex,
+          onTap: _onNavTap,
+        ),
       ),
     );
   }
@@ -260,6 +334,104 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildDoseCard(Reminder reminder, String action, Color actionColor) {
+    return Dismissible(
+      key: Key(reminder.id.toString()),
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          // Edit (swipe right)
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  CrearRecordatorioScreen(reminderToEdit: reminder),
+            ),
+          );
+          if (result == true) {
+            _loadReminders();
+          }
+          return false; // Do not dismiss the item
+        } else {
+          // Delete (swipe left)
+          _deleteReminder(reminder.id!);
+          return true; // Dismiss the item after deletion
+        }
+      },
+      background: Container(
+        color: Colors.blue,
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        alignment: Alignment.centerLeft,
+        child: Icon(Icons.edit, color: Colors.white),
+      ),
+      secondaryBackground: Container(
+        color: Colors.red,
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        alignment: Alignment.centerRight,
+        child: Icon(Icons.delete, color: Colors.white),
+      ),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 5,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.lock, color: Colors.white, size: 20),
+            ),
+            SizedBox(width: 15),
+            Expanded(
+              child: Text(
+                reminder.medicineName,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ConfirmationScreen(reminder: reminder),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: actionColor,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: Text(action, style: TextStyle(fontSize: 14)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMedicineCard(Medicine medicine) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: EdgeInsets.all(16),
@@ -281,15 +453,15 @@ class _HomeScreenState extends State<HomeScreen>
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Colors.black,
+              color: Colors.green,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.lock, color: Colors.white, size: 20),
+            child: Icon(Icons.medication, color: Colors.white, size: 20),
           ),
           SizedBox(width: 15),
           Expanded(
             child: Text(
-              reminder.medicineName,
+              medicine.name,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -297,25 +469,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ConfirmationScreen(reminder: reminder),
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: actionColor,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-            child: Text(action, style: TextStyle(fontSize: 14)),
-          ),
+          Icon(Icons.arrow_forward_ios, color: Colors.grey.shade400, size: 16),
         ],
       ),
     );

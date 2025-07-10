@@ -132,6 +132,18 @@ class DatabaseHelper {
     await NotificationService().scheduleReminderNotification(reminderWithId);
   }
 
+  Future<void> updateReminder(Reminder reminder) async {
+    final db = await database;
+    await db.update(
+      'reminders',
+      reminder.toMap(),
+      where: 'id = ?',
+      whereArgs: [reminder.id],
+    );
+    // Reschedule the notification with potentially new details
+    await NotificationService().scheduleReminderNotification(reminder);
+  }
+
   // Add method to delete reminder and cancel notification
   Future<void> deleteReminder(int id) async {
     final db = await database;

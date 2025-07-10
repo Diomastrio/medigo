@@ -10,6 +10,10 @@ import '../data/models/reminder.dart';
 import '../services/notification_service.dart'; // Add this import
 
 class CrearRecordatorioScreen extends StatefulWidget {
+  final Reminder? reminderToEdit;
+
+  CrearRecordatorioScreen({this.reminderToEdit});
+
   @override
   _CrearRecordatorioScreenState createState() =>
       _CrearRecordatorioScreenState();
@@ -57,6 +61,9 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.reminderToEdit != null) {
+      _initializeEditingData();
+    }
     _loadMedicines();
   }
 
@@ -66,7 +73,9 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
       setState(() {
         _medicines = medicines;
         _isLoadingMedicines = false;
-        if (_medicines.isNotEmpty) {
+
+        // Initialize with editing data or default value
+        if (widget.reminderToEdit == null && _medicines.isNotEmpty) {
           selectedMedication = _medicines.first.name;
         }
       });
@@ -76,6 +85,28 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
       });
       print('Error loading medicines: $e');
     }
+  }
+
+  void _initializeEditingData() {
+    final reminder = widget.reminderToEdit!;
+
+    selectedMedication = reminder.medicineName;
+    final timeParts = reminder.time.split(':');
+    selectedTime = TimeOfDay(
+      hour: int.parse(timeParts[0]),
+      minute: int.parse(timeParts[1]),
+    );
+    dosisCount = reminder.doseCount;
+    dosisUnit = reminder.doseUnit;
+    dosisType = reminder.doseType;
+    selectedTiming = reminder.timing != null
+        ? MedicationTiming.values.firstWhere(
+            (e) => e.toString().split('.').last == reminder.timing,
+            orElse: () => MedicationTiming.emptyStomach,
+          )
+        : null;
+    duration = reminder.duration;
+    durationType = reminder.durationType;
   }
 
   void _onDosisTypeChanged(String newType) {
@@ -251,7 +282,9 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
                   ),
                 )
               : DropdownButton<String>(
-                  value: selectedMedication,
+                  value: _medicines.any((m) => m.name == selectedMedication)
+                      ? selectedMedication
+                      : (_medicines.isNotEmpty ? _medicines.first.name : null),
                   isExpanded: true,
                   underline: Container(),
                   items: _medicines.map((Medicine medicine) {
@@ -282,7 +315,8 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
       height: 50,
       child: ElevatedButton(
         onPressed: () async {
-          final newReminder = Reminder(
+          final reminder = Reminder(
+            id: widget.reminderToEdit?.id, // Keep the ID for updates
             medicineName: selectedMedication,
             time:
                 "${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}",
@@ -294,17 +328,23 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
             durationType: durationType,
           );
 
-          await _dbHelper.insertReminder(newReminder);
+          if (widget.reminderToEdit == null) {
+            await _dbHelper.insertReminder(reminder);
+          } else {
+            await _dbHelper.updateReminder(reminder);
+          }
 
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
+              SnackBar(
                 content: Text(
-                  'Recordatorio guardado y notificación programada',
+                  widget.reminderToEdit == null
+                      ? 'Recordatorio guardado y notificación programada'
+                      : 'Recordatorio actualizado',
                 ),
               ),
             );
-            Navigator.pop(context);
+            Navigator.pop(context, true); // Return true to indicate success
           }
         },
         style: ElevatedButton.styleFrom(
@@ -315,7 +355,9 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
           elevation: 0,
         ),
         child: Text(
-          'Guardar recordatorio',
+          widget.reminderToEdit == null
+              ? 'Guardar recordatorio'
+              : 'Actualizar recordatorio',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
