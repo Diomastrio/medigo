@@ -3,6 +3,7 @@ import 'package:medigo/screens/home_screen.dart';
 import './screens/dashboard_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/notification_service.dart'; // Add this import
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart'; // Add this import
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -10,6 +11,7 @@ void main() async {
   // Initialize notifications
   await NotificationService().initialize();
   await NotificationService().requestPermissions();
+  await AndroidAlarmManager.initialize(); // Add this line
   
   runApp(MyApp());
 }
