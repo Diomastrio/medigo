@@ -2,7 +2,8 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'models/medicine.dart';
 import 'models/reminder.dart';
-import '../services/notification_service.dart'; // Add this import
+import 'models/dose_history.dart'; // Import the new model
+import '../services/notification_service.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -21,7 +22,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'medicine.db');
     return await openDatabase(
       path,
-      version: 2, // Increment version
+      version: 3, // Increment version
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE medicines(
@@ -30,11 +31,15 @@ class DatabaseHelper {
           )
         ''');
         await _createRemindersTable(db); // Call create for new table
+        await _createDoseHistoryTable(db); // Create history table
         await _seedDatabase(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
           await _createRemindersTable(db);
+        }
+        if (oldVersion < 3) {
+          await _createDoseHistoryTable(db); // Create history table on upgrade
         }
       },
     );
@@ -52,6 +57,18 @@ class DatabaseHelper {
         timing TEXT,
         duration INTEGER,
         durationType TEXT
+      )
+    ''');
+  }
+
+  Future<void> _createDoseHistoryTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE dose_history(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        reminderId INTEGER,
+        medicineName TEXT,
+        doseDetails TEXT,
+        takenAt TEXT
       )
     ''');
   }
@@ -96,6 +113,26 @@ class DatabaseHelper {
   Future<void> deleteMedicine(int id) async {
     final db = await database;
     await db.delete('medicines', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Add methods for dose history
+  Future<void> addDoseHistory(Reminder reminder) async {
+    final db = await database;
+    final history = DoseHistory(
+      reminderId: reminder.id!,
+      medicineName: reminder.medicineName,
+      doseDetails: '${reminder.doseCount} ${reminder.doseType} (${reminder.doseUnit})',
+      takenAt: DateTime.now().toIso8601String(),
+    );
+    await db.insert('dose_history', history.toMap());
+  }
+
+  Future<List<DoseHistory>> getDoseHistory() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('dose_history', orderBy: 'takenAt DESC');
+    return List.generate(maps.length, (i) {
+      return DoseHistory.fromMap(maps[i]);
+    });
   }
 
   Future<List<Reminder>> getReminders() async {

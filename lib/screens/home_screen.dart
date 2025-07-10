@@ -58,6 +58,15 @@ class _HomeScreenState extends State<HomeScreen>
     _loadMedicines();
   }
 
+  // Add this new method to handle when the screen becomes visible again
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh data when returning to this screen
+    _loadReminders();
+    _loadMedicines();
+  }
+
   void _loadReminders() async {
     var reminders = await _dbHelper.getReminders();
     if (mounted) {

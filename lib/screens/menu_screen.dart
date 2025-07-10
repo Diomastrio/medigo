@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'recordatorio_screen.dart'; // Add this import
 import 'farmacia_screen.dart';
+import 'history_screen.dart'; // Add this import
 
 class MenuScreen extends StatelessWidget {
   final VoidCallback onMenuClose;
@@ -136,7 +137,11 @@ class MenuScreen extends StatelessWidget {
               onMenuClose();
 
               // Navigate to specific screens based on the selected item
-              if (item['label'] == 'Recordatorios') {
+              if (item['label'] == 'Historial') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => HistoryScreen()),
+                );
+              } else if (item['label'] == 'Recordatorios') {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => CrearRecordatorioScreen(),

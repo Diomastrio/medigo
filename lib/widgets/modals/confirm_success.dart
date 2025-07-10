@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:medigo/data/models/reminder.dart';
+import 'package:medigo/screens/history_screen.dart'; // Import the history screen
 
 class MediGoSuccessModal extends StatelessWidget {
   final Reminder reminder;
@@ -123,9 +124,17 @@ class MediGoSuccessModal extends StatelessWidget {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pop();
-                      // Handle navigation to history screen
+                      Navigator.of(context).pop(); // Close the modal
+                      Navigator.of(
+                        context,
+                      ).pop(); // Close the confirmation screen
+                      // Navigate to history screen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HistoryScreen(),
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,

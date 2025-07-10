@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../data/database_helper.dart';
 import '../data/models/reminder.dart';
 import '../widgets/modals/confirm_success.dart';
 
@@ -81,7 +82,10 @@ class ConfirmationScreen extends StatelessWidget {
             ),
             const Spacer(),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
+                // Add to history
+                await DatabaseHelper().addDoseHistory(reminder);
+                // Show success modal
                 MediGoSuccessModal.show(context, reminder);
               },
               style: ElevatedButton.styleFrom(
@@ -102,24 +106,7 @@ class ConfirmationScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            TextButton(
-              onPressed: () {
-                // TODO: Navigate to dose history screen
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Historial de tomas no implementado.'),
-                  ),
-                );
-              },
-              child: Text(
-                'Ver historial de tomas',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade700,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-            ),
+
             const SizedBox(height: 20),
           ],
         ),
