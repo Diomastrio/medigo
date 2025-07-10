@@ -7,6 +7,7 @@ import '../widgets/duration_section_widget.dart';
 import '../data/database_helper.dart';
 import '../data/models/medicine.dart';
 import '../data/models/reminder.dart';
+import '../services/notification_service.dart'; // Add this import
 
 class CrearRecordatorioScreen extends StatefulWidget {
   @override
@@ -283,7 +284,8 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
         onPressed: () async {
           final newReminder = Reminder(
             medicineName: selectedMedication,
-            time: "${selectedTime.hour}:${selectedTime.minute}",
+            time:
+                "${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}",
             doseCount: dosisCount,
             doseUnit: dosisUnit,
             doseType: dosisType,
@@ -295,9 +297,13 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
           await _dbHelper.insertReminder(newReminder);
 
           if (mounted) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('Recordatorio guardado')));
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Recordatorio guardado y notificación programada',
+                ),
+              ),
+            );
             Navigator.pop(context);
           }
         },

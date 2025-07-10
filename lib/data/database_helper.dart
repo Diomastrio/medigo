@@ -1,7 +1,8 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'models/medicine.dart';
-import 'models/reminder.dart'; // Import the new model
+import 'models/reminder.dart';
+import '../services/notification_service.dart'; // Add this import
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -105,13 +106,36 @@ class DatabaseHelper {
     });
   }
 
-  // Add new method to insert a reminder
+  // Update the insertReminder method
   Future<void> insertReminder(Reminder reminder) async {
     final db = await database;
-    await db.insert(
+    final id = await db.insert(
       'reminders',
       reminder.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    
+    // Create reminder with the generated ID
+    final reminderWithId = Reminder(
+      id: id,
+      medicineName: reminder.medicineName,
+      time: reminder.time,
+      doseCount: reminder.doseCount,
+      doseUnit: reminder.doseUnit,
+      doseType: reminder.doseType,
+      timing: reminder.timing,
+      duration: reminder.duration,
+      durationType: reminder.durationType,
+    );
+    
+    // Schedule notification
+    await NotificationService().scheduleReminderNotification(reminderWithId);
+  }
+
+  // Add method to delete reminder and cancel notification
+  Future<void> deleteReminder(int id) async {
+    final db = await database;
+    await db.delete('reminders', where: 'id = ?', whereArgs: [id]);
+    await NotificationService().cancelReminderNotification(id);
   }
 }

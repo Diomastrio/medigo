@@ -1,3 +1,14 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        // Use Kotlin DSL syntax instead of Groovy
+        classpath("com.android.tools.build:gradle:8.1.0")
+    }
+}
+
 allprojects {
     repositories {
         google()

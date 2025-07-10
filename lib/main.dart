@@ -2,8 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:medigo/screens/home_screen.dart';
 import './screens/dashboard_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'services/notification_service.dart'; // Add this import
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize notifications
+  await NotificationService().initialize();
+  await NotificationService().requestPermissions();
+  
   runApp(MyApp());
 }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/models/reminder.dart';
+import '../widgets/modals/confirm_success.dart';
 
 class ConfirmationScreen extends StatelessWidget {
   final Reminder reminder;
@@ -81,14 +82,7 @@ class ConfirmationScreen extends StatelessWidget {
             const Spacer(),
             ElevatedButton(
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Toma de ${reminder.medicineName} confirmada.',
-                    ),
-                  ),
-                );
-                Navigator.pop(context);
+                MediGoSuccessModal.show(context, reminder);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
