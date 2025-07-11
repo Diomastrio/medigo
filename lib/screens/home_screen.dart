@@ -9,6 +9,7 @@ import '../data/models/medicine.dart';
 import '../services/search_service.dart'; // Import the search service
 import 'confirmation_screen.dart'; // Import the new confirmation screen
 import 'recordatorio_screen.dart'; // Make sure this import exists
+import 'package:medigo/screens/alerts_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -58,33 +59,49 @@ class _HomeScreenState extends State<HomeScreen>
     _loadMedicines();
   }
 
-  // Add this new method to handle when the screen becomes visible again
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Refresh data when returning to this screen
     _loadReminders();
     _loadMedicines();
   }
 
-  void _loadReminders() async {
-    var reminders = await _dbHelper.getReminders();
-    if (mounted) {
-      setState(() {
-        _reminders = reminders;
-        _onSearchChanged();
-      });
+  // Convert existing load methods to async versions for better refresh handling
+  Future<void> _loadRemindersAsync() async {
+    try {
+      var reminders = await _dbHelper.getReminders();
+      if (mounted) {
+        setState(() {
+          _reminders = reminders;
+          _onSearchChanged();
+        });
+      }
+    } catch (e) {
+      print('Error loading reminders: $e');
     }
   }
 
-  void _loadMedicines() async {
-    var medicines = await _dbHelper.getMedicines();
-    if (mounted) {
-      setState(() {
-        _medicines = medicines;
-        _onSearchChanged();
-      });
+  Future<void> _loadMedicinesAsync() async {
+    try {
+      var medicines = await _dbHelper.getMedicines();
+      if (mounted) {
+        setState(() {
+          _medicines = medicines;
+          _onSearchChanged();
+        });
+      }
+    } catch (e) {
+      print('Error loading medicines: $e');
     }
+  }
+
+  // Update existing load methods to use the new async versions
+  void _loadReminders() async {
+    await _loadRemindersAsync();
+  }
+
+  void _loadMedicines() async {
+    await _loadMedicinesAsync();
   }
 
   void _onSearchChanged() {
@@ -130,6 +147,26 @@ class _HomeScreenState extends State<HomeScreen>
       context,
     ).showSnackBar(SnackBar(content: Text('Recordatorio eliminado')));
     _loadReminders();
+  }
+
+  // Add this new refresh method
+  Future<void> _refreshData() async {
+    // Add a small delay to show the refresh indicator
+    await Future.delayed(Duration(milliseconds: 500));
+
+    // Reload all data
+    await Future.wait([_loadRemindersAsync(), _loadMedicinesAsync()]);
+
+    // Show a brief confirmation message
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Datos actualizados'),
+          duration: Duration(seconds: 1),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 
   @override
@@ -208,9 +245,9 @@ class _HomeScreenState extends State<HomeScreen>
             IconButton(
               icon: Icon(Icons.notifications, color: Colors.orange),
               onPressed: () {
-                ScaffoldMessenger.of(
+                Navigator.of(
                   context,
-                ).showSnackBar(SnackBar(content: Text('Alertas seleccionado')));
+                ).push(MaterialPageRoute(builder: (context) => AlertsScreen()));
               },
             ),
 
@@ -223,101 +260,106 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ],
         ),
-        body: SingleChildScrollView(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Search Bar
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(25),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      spreadRadius: 1,
-                      blurRadius: 5,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.search, color: Colors.grey.shade600),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Buscar medicamentos, recordatorios...',
-                          hintStyle: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 16,
+        body: RefreshIndicator(
+          onRefresh: _refreshData,
+          color: Colors.blue,
+          child: SingleChildScrollView(
+            physics: AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Search Bar
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 5,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.search, color: Colors.grey.shade600),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Buscar medicamentos, recordatorios...',
+                            hintStyle: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 16,
+                            ),
+                            border: InputBorder.none,
                           ),
-                          border: InputBorder.none,
+                          style: TextStyle(color: Colors.black, fontSize: 16),
                         ),
-                        style: TextStyle(color: Colors.black, fontSize: 16),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              SizedBox(height: 25),
+                SizedBox(height: 25),
 
-              // Próximas dosis Section
-              _buildSectionHeader('Próximas dosis', 'Ver todo'),
-              SizedBox(height: 15),
-              _filteredReminders.isEmpty
-                  ? Center(
-                      child: Text(
-                        SearchService.getEmptyMessage(
-                          _reminders,
-                          _searchController.text,
-                          'recordatorios',
+                // Próximas dosis Section
+                _buildSectionHeader('Próximas dosis', 'Ver todo'),
+                SizedBox(height: 15),
+                _filteredReminders.isEmpty
+                    ? Center(
+                        child: Text(
+                          SearchService.getEmptyMessage(
+                            _reminders,
+                            _searchController.text,
+                            'recordatorios',
+                          ),
                         ),
+                      )
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: _filteredReminders.length,
+                        itemBuilder: (context, index) {
+                          final reminder = _filteredReminders[index];
+                          return _buildDoseCard(
+                            reminder,
+                            'Confirmar',
+                            Colors.blue,
+                          );
+                        },
                       ),
-                    )
-                  : ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: _filteredReminders.length,
-                      itemBuilder: (context, index) {
-                        final reminder = _filteredReminders[index];
-                        return _buildDoseCard(
-                          reminder,
-                          'Confirmar',
-                          Colors.blue,
-                        );
-                      },
-                    ),
-              SizedBox(height: 25),
+                SizedBox(height: 25),
 
-              // Medicamentos Actuales Section
-              _buildSectionHeader('Medicamentos Actuales', 'Ver todo'),
-              SizedBox(height: 15),
-              _filteredMedicines.isEmpty
-                  ? Center(
-                      child: Text(
-                        SearchService.getEmptyMessage(
-                          _medicines,
-                          _searchController.text,
-                          'medicamentos',
+                // Medicamentos Actuales Section
+                _buildSectionHeader('Medicamentos Actuales', 'Ver todo'),
+                SizedBox(height: 15),
+                _filteredMedicines.isEmpty
+                    ? Center(
+                        child: Text(
+                          SearchService.getEmptyMessage(
+                            _medicines,
+                            _searchController.text,
+                            'medicamentos',
+                          ),
                         ),
+                      )
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: _filteredMedicines.length,
+                        itemBuilder: (context, index) {
+                          final medicine = _filteredMedicines[index];
+                          return _buildMedicineCard(medicine);
+                        },
                       ),
-                    )
-                  : ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: _filteredMedicines.length,
-                      itemBuilder: (context, index) {
-                        final medicine = _filteredMedicines[index];
-                        return _buildMedicineCard(medicine);
-                      },
-                    ),
-              SizedBox(height: 25),
-            ],
+                SizedBox(height: 25),
+              ],
+            ),
           ),
         ),
         bottomNavigationBar: CustomBottomNavBar(

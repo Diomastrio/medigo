@@ -116,7 +116,7 @@ class NotificationService {
       showWhen: true,
       icon: '@mipmap/ic_launcher',
       actions: <AndroidNotificationAction>[
-        AndroidNotificationAction('snooze_action', 'Snooze 5 min'),
+        AndroidNotificationAction('snooze_action', 'Aplazar 5 min'),
       ],
     );
 
