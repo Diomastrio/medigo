@@ -48,4 +48,5 @@ flutter {
 dependencies {
     // Use Kotlin DSL syntax with parentheses instead of quotes
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    implementation("androidx.car.app:app:1.4.0")
 }

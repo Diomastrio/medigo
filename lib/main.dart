@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Add this import
 import 'package:medigo/screens/home_screen.dart';
 import './screens/dashboard_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'services/notification_service.dart'; // Add this import
-import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart'; // Add this import
+import 'services/notification_service.dart';
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,7 +12,7 @@ void main() async {
   // Initialize notifications
   await NotificationService().initialize();
   await NotificationService().requestPermissions();
-  await AndroidAlarmManager.initialize(); // Add this line
+  await AndroidAlarmManager.initialize();
   
   runApp(MyApp());
 }
@@ -22,9 +23,47 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'MediGO',
       theme: ThemeData(primarySwatch: Colors.blue, fontFamily: 'Roboto'),
-      home: AuthScreen(),
+      home: FutureBuilder<bool>(
+        future: _isRunningOnAutomotive(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Scaffold(
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Cargando MediGO...'),
+                  ],
+                ),
+              ),
+            );
+          }
+          
+          // If running on Android Automotive, go directly to HomeScreen
+          if (snapshot.data == true) {
+            return HomeScreen();
+          }
+          
+          // Otherwise, show the normal auth flow
+          return AuthScreen();
+        },
+      ),
       debugShowCheckedModeBanner: false,
     );
+  }
+
+  Future<bool> _isRunningOnAutomotive() async {
+    try {
+      const platform = MethodChannel('com.example.medigo/automotive');
+      final bool isAutomotive = await platform.invokeMethod('isAutomotive');
+      return isAutomotive;
+    } catch (e) {
+      // Fallback: assume not automotive if method channel fails
+      print('Error checking automotive mode: $e');
+      return false;
+    }
   }
 }
 
