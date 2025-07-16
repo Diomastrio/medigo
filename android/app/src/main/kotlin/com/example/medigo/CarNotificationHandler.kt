@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.car.app.notification.CarAppExtender
 
 object CarNotificationHandler {
 
@@ -44,13 +45,18 @@ object CarNotificationHandler {
 
         // Build the notification for the car
         val builder = NotificationCompat.Builder(context, MEDICATION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_notification_icon) // You need to add this icon
+            .setSmallIcon(R.drawable.ic_notification_icon)
             .setContentTitle(title)
             .setContentText(content)
             .setContentIntent(openAppPendingIntent)
             .setCategory(Notification.CATEGORY_REMINDER)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
+            .extend(CarAppExtender.Builder()
+                .setContentTitle(title)
+                .setContentText(content)
+                .setImportance(NotificationManager.IMPORTANCE_HIGH)
+                .build())
 
         with(NotificationManagerCompat.from(context)) {
             notify(MEDICATION_REMINDER_NOTIFICATION_ID, builder.build())

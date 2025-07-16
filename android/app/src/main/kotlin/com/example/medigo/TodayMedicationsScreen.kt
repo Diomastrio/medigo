@@ -79,10 +79,10 @@ class TodayMedicationsScreen(carContext: CarContext) : Screen(carContext) {
     private fun createMedicationRow(medication: MedicationInfo): Row {
         val timeText = medication.time
         val statusText = if (medication.taken) "✓ Tomado" else "Pendiente"
-        val statusColor = if (medication.taken) 
+        val statusColor = if (medication.taken)
             CarColor.createCustom(android.graphics.Color.GREEN, android.graphics.Color.GREEN)
         else 
-            CarColor.createCustom(android.graphics.Color.ORANGE, android.graphics.Color.ORANGE)
+            CarColor.createCustom(android.graphics.Color.rgb(255, 165, 0), android.graphics.Color.rgb(255, 165, 0))
 
         return Row.Builder()
             .setTitle(medication.name)

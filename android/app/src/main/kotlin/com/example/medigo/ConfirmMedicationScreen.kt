@@ -6,7 +6,7 @@ import androidx.car.app.model.*
 
 class ConfirmMedicationScreen(
     carContext: CarContext,
-    private val medication: TodayMedicationsScreen.MedicationReminder
+    private val medication: TodayMedicationsScreen.MedicationInfo
 ) : Screen(carContext) {
     
     override fun onGetTemplate(): Template {
