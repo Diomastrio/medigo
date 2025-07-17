@@ -2,9 +2,8 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'models/medicine.dart';
 import 'models/reminder.dart';
-import 'models/dose_history.dart'; // Import the new model
+import 'models/dose_history.dart';
 import '../services/notification_service.dart';
-import '../services/automotive_sync_service.dart'; // Add this import
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -23,7 +22,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'medicine.db');
     return await openDatabase(
       path,
-      version: 3, // Increment version
+      version: 3,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE medicines(
@@ -31,8 +30,8 @@ class DatabaseHelper {
             name TEXT
           )
         ''');
-        await _createRemindersTable(db); // Call create for new table
-        await _createDoseHistoryTable(db); // Create history table
+        await _createRemindersTable(db);
+        await _createDoseHistoryTable(db);
         await _seedDatabase(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
@@ -40,7 +39,7 @@ class DatabaseHelper {
           await _createRemindersTable(db);
         }
         if (oldVersion < 3) {
-          await _createDoseHistoryTable(db); // Create history table on upgrade
+          await _createDoseHistoryTable(db);
         }
       },
     );
@@ -116,7 +115,6 @@ class DatabaseHelper {
     await db.delete('medicines', where: 'id = ?', whereArgs: [id]);
   }
 
-  // Add methods for dose history
   Future<void> addDoseHistory(Reminder reminder) async {
     final db = await database;
     final history = DoseHistory(
@@ -144,7 +142,6 @@ class DatabaseHelper {
     });
   }
 
-  // Update the insertReminder method
   Future<void> insertReminder(Reminder reminder) async {
     final db = await database;
     final id = await db.insert(
@@ -153,7 +150,6 @@ class DatabaseHelper {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
     
-    // Create reminder with the generated ID
     final reminderWithId = Reminder(
       id: id,
       medicineName: reminder.medicineName,
@@ -166,12 +162,8 @@ class DatabaseHelper {
       durationType: reminder.durationType,
     );
     
-    // Schedule notification
     await NotificationService().scheduleReminderNotification(reminderWithId);
-    
-    // Sync to automotive
-    await AutomotiveSyncService().syncRemindersToAutomotive();
-    print('Reminder synced to automotive after insert');
+    print('Reminder saved to database');
   }
 
   Future<void> updateReminder(Reminder reminder) async {
@@ -183,22 +175,14 @@ class DatabaseHelper {
       whereArgs: [reminder.id],
     );
     
-    // Reschedule the notification with potentially new details
     await NotificationService().scheduleReminderNotification(reminder);
-    
-    // Sync to automotive
-    await AutomotiveSyncService().syncRemindersToAutomotive();
-    print('Reminder synced to automotive after update');
+    print('Reminder updated in database');
   }
 
-  // Add method to delete reminder and cancel notification
   Future<void> deleteReminder(int id) async {
     final db = await database;
     await db.delete('reminders', where: 'id = ?', whereArgs: [id]);
     await NotificationService().cancelReminderNotification(id);
-    
-    // Sync after deletion
-    await AutomotiveSyncService().syncRemindersToAutomotive();
-    print('Reminders synced to automotive after deletion');
+    print('Reminder deleted from database');
   }
 }

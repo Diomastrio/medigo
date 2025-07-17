@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import '../data/database_helper.dart';
 import '../data/models/reminder.dart';
 import '../services/search_service.dart';
-import '../services/bluetooth_sync_service.dart';
-import '../services/automotive_sync_service.dart';
-import 'confirmation_screen.dart';
-import '../widgets/modals/confirm_success.dart';
+import '../services/mqtt_service.dart'; // Replace bluetooth with mqtt
 
 class AutomotiveHomeScreen extends StatefulWidget {
   @override
@@ -17,52 +14,51 @@ class _AutomotiveHomeScreenState extends State<AutomotiveHomeScreen> {
   List<Reminder> _filteredReminders = [];
   final DatabaseHelper _dbHelper = DatabaseHelper();
   bool _isLoading = true;
-  bool _isBluetoothConnected = false; // Add this
-  final BluetoothSyncService _bluetoothService = BluetoothSyncService(); // Add this
+  bool _isMqttConnected = false;
+  final MqttService _mqttService = MqttService();
 
   @override
   void initState() {
     super.initState();
     _loadReminders();
-    _initializeBluetooth(); // Add this
+    _initializeMqtt();
   }
 
-  // Add this method
-  Future<void> _initializeBluetooth() async {
-    await _bluetoothService.initialize();
-    setState(() {
-      _isBluetoothConnected = _bluetoothService.isConnected;
-    });
+  Future<void> _initializeMqtt() async {
+    try {
+      await _mqttService.initialize();
+      setState(() {
+        _isMqttConnected = _mqttService.isConnected;
+      });
+    } catch (e) {
+      print('Error initializing MQTT: $e');
+    }
   }
 
-  // Add this method
-  Future<void> _connectToBluetooth() async {
+  Future<void> _connectToMqtt() async {
     setState(() {
       _isLoading = true;
     });
     
     try {
-      await _bluetoothService.initialize();
-      
-      // Wait a moment for connection
-      await Future.delayed(Duration(seconds: 2));
+      await _mqttService.connect();
       
       setState(() {
-        _isBluetoothConnected = _bluetoothService.isConnected;
+        _isMqttConnected = _mqttService.isConnected;
         _isLoading = false;
       });
       
-      if (_isBluetoothConnected) {
+      if (_isMqttConnected) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Conectado a ${_bluetoothService.connectedDevice ?? "dispositivo"}'),
+            content: Text('Conectado al servidor MQTT'),
             backgroundColor: Colors.green,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('No se pudo conectar. Asegúrate de que el teléfono esté cerca.'),
+            content: Text('No se pudo conectar al servidor MQTT'),
             backgroundColor: Colors.red,
           ),
         );
@@ -86,30 +82,36 @@ class _AutomotiveHomeScreenState extends State<AutomotiveHomeScreen> {
         _isLoading = true;
       });
 
-      // Get synced reminders from phone
-      final syncedReminders = await AutomotiveSyncService().getRemindersFromPhone();
+      final allReminders = await _dbHelper.getReminders();
       
       // Filter for today's reminders that haven't been taken
       final now = DateTime.now();
       final todayReminders = <Reminder>[];
       
-      for (final reminder in syncedReminders) {
+      for (final reminder in allReminders) {
         // Check if reminder is for today and not taken
         if (reminder.id != null) {
-          final isTaken = await AutomotiveSyncService().isReminderTaken(reminder.id!);
-          if (!isTaken) {
+          final history = await _dbHelper.getDoseHistory();
+          final takenToday = history.any((h) => 
+            h.reminderId == reminder.id && 
+            DateTime.parse(h.takenAt).day == now.day &&
+            DateTime.parse(h.takenAt).month == now.month &&
+            DateTime.parse(h.takenAt).year == now.year
+          );
+          
+          if (!takenToday) {
             todayReminders.add(reminder);
           }
         }
       }
 
       setState(() {
-        _reminders = syncedReminders;
-        _filteredReminders = todayReminders; // This was missing!
+        _reminders = allReminders;
+        _filteredReminders = todayReminders;
         _isLoading = false;
       });
       
-      print('Loaded ${todayReminders.length} pending reminders from sync');
+      print('Loaded ${todayReminders.length} pending reminders');
     } catch (e) {
       print('Error loading reminders: $e');
       setState(() {
@@ -128,11 +130,11 @@ class _AutomotiveHomeScreenState extends State<AutomotiveHomeScreen> {
   Future<void> _confirmDose(Reminder reminder) async {
     try {
       if (reminder.id != null) {
-        // Mark as taken in automotive sync service
-        await AutomotiveSyncService().markReminderTaken(reminder.id!);
-        
-        // Also add to dose history
+        // Add to dose history
         await _dbHelper.addDoseHistory(reminder);
+        
+        // Send confirmation via MQTT
+        await _mqttService.sendDoseConfirmation(reminder);
       }
       
       // Show large success alert
@@ -142,7 +144,6 @@ class _AutomotiveHomeScreenState extends State<AutomotiveHomeScreen> {
       await _loadReminders();
     } catch (e) {
       print('Error confirming dose: $e');
-      // Show error alert
       _showErrorAlert();
     }
   }
@@ -388,24 +389,24 @@ class _AutomotiveHomeScreenState extends State<AutomotiveHomeScreen> {
                   ),
                   Spacer(),
                   
-                  // Bluetooth Connection Status
+                  // MQTT Connection Status
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: _isBluetoothConnected ? Colors.green : Colors.grey[700],
+                      color: _isMqttConnected ? Colors.green : Colors.grey[700],
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          _isBluetoothConnected ? Icons.bluetooth_connected : Icons.bluetooth_disabled,
+                          _isMqttConnected ? Icons.cloud_done : Icons.cloud_off,
                           color: Colors.white,
                           size: 16,
                         ),
                         SizedBox(width: 4),
                         Text(
-                          _isBluetoothConnected ? 'Conectado' : 'Desconectado',
+                          _isMqttConnected ? 'Conectado' : 'Desconectado',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -420,14 +421,14 @@ class _AutomotiveHomeScreenState extends State<AutomotiveHomeScreen> {
                   
                   // Connect Button
                   ElevatedButton.icon(
-                    onPressed: _isBluetoothConnected ? null : _connectToBluetooth,
+                    onPressed: _isMqttConnected ? null : _connectToMqtt,
                     icon: Icon(
-                      _isBluetoothConnected ? Icons.check : Icons.bluetooth,
+                      _isMqttConnected ? Icons.check : Icons.cloud,
                       size: 16,
                     ),
-                    label: Text(_isBluetoothConnected ? 'Conectado' : 'Conectar'),
+                    label: Text(_isMqttConnected ? 'Conectado' : 'Conectar'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _isBluetoothConnected ? Colors.green : Colors.blue,
+                      backgroundColor: _isMqttConnected ? Colors.green : Colors.blue,
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       shape: RoundedRectangleBorder(

@@ -7,9 +7,7 @@ import '../widgets/duration_section_widget.dart';
 import '../data/database_helper.dart';
 import '../data/models/medicine.dart';
 import '../data/models/reminder.dart';
-import '../services/notification_service.dart'; // Add this import
-import '../services/automotive_sync_service.dart'; // Add this import
-import '../widgets/bluetooth_sync_button.dart'; // Add this import
+import '../services/notification_service.dart';
 
 class CrearRecordatorioScreen extends StatefulWidget {
   final Reminder? reminderToEdit;
@@ -51,7 +49,6 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
     "Parche transdérmico",
   ];
 
-  // Mapping of medication forms to their suggested units
   final Map<String, String> _dosisTypeToUnitMap = {
     "Tableta": "mg",
     "Cápsula": "mg",
@@ -76,7 +73,6 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
         _medicines = medicines;
         _isLoadingMedicines = false;
 
-        // Initialize with editing data or default value
         if (widget.reminderToEdit == null && _medicines.isNotEmpty) {
           selectedMedication = _medicines.first.name;
         }
@@ -114,7 +110,6 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
   void _onDosisTypeChanged(String newType) {
     setState(() {
       dosisType = newType;
-      // Automatically suggest the appropriate unit based on the medication form
       if (_dosisTypeToUnitMap.containsKey(newType)) {
         dosisUnit = _dosisTypeToUnitMap[newType]!;
       }
@@ -170,10 +165,6 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Bluetooth Sync Section - Add this
-            BluetoothSyncButton(),
-            SizedBox(height: 24),
-            
             // Time Picker
             _buildTimePickerSection(),
             SizedBox(height: 24),
@@ -321,7 +312,6 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
       height: 50,
       child: ElevatedButton(
         onPressed: () async {
-          // Show loading indicator
           showDialog(
             context: context,
             barrierDismissible: false,
@@ -332,7 +322,7 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
 
           try {
             final reminder = Reminder(
-              id: widget.reminderToEdit?.id, // Keep the ID for updates
+              id: widget.reminderToEdit?.id,
               medicineName: selectedMedication,
               time:
                   "${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}",
@@ -350,7 +340,6 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
               await _dbHelper.updateReminder(reminder);
             }
 
-            // Close loading dialog
             Navigator.of(context).pop();
 
             if (mounted) {
@@ -358,15 +347,14 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
                 SnackBar(
                   content: Text(
                     widget.reminderToEdit == null
-                        ? 'Recordatorio guardado y sincronizado'
-                        : 'Recordatorio actualizado y sincronizado',
+                        ? 'Recordatorio guardado'
+                        : 'Recordatorio actualizado',
                   ),
                 ),
               );
-              Navigator.pop(context, true); // Return true to indicate success
+              Navigator.pop(context, true);
             }
           } catch (e) {
-            // Close loading dialog
             Navigator.of(context).pop();
             
             if (mounted) {
@@ -401,7 +389,6 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
   }
 }
 
-// Para usar en tu app principal
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

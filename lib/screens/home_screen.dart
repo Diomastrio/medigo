@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'menu_screen.dart'; // Import the new menu screen
 import '../widgets/custom_bottom_nav_bar.dart'; // Import the custom bottom nav bar
 import '../widgets/medicine_card.dart'; // Import the new medicine card widget
+import '../widgets/mqtt_sync_button.dart'; // Import the MQTT sync button
 import '../data/database_helper.dart';
 import '../data/models/reminder.dart';
 import '../data/models/medicine.dart';
@@ -302,6 +303,57 @@ class _HomeScreenState extends State<HomeScreen>
                           style: TextStyle(color: Colors.black, fontSize: 16),
                         ),
                       ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 25),
+
+                // MQTT Sync Button Section
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 5,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.directions_car,
+                            color: Colors.blue,
+                            size: 24,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'Sincronización Automotriz',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Envía tus recordatorios al sistema del automóvil vía MQTT',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      MqttSyncButton(),
                     ],
                   ),
                 ),

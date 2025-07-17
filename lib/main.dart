@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Add this import
 import 'package:medigo/screens/home_screen.dart';
 import 'package:medigo/screens/automotive_home_screen.dart'; // Add this import
-import './screens/dashboard_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/notification_service.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
