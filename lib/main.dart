@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Add this import
 import 'package:medigo/screens/home_screen.dart';
+import 'package:medigo/screens/automotive_home_screen.dart'; // Add this import
 import './screens/dashboard_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/notification_service.dart';
@@ -41,9 +42,9 @@ class MyApp extends StatelessWidget {
             );
           }
           
-          // If running on Android Automotive, go directly to HomeScreen
+          // If running on Android Automotive, go directly to AutomotiveHomeScreen
           if (snapshot.data == true) {
-            return HomeScreen();
+            return AutomotiveHomeScreen();
           }
           
           // Otherwise, show the normal auth flow

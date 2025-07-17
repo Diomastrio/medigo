@@ -4,6 +4,7 @@ import 'models/medicine.dart';
 import 'models/reminder.dart';
 import 'models/dose_history.dart'; // Import the new model
 import '../services/notification_service.dart';
+import '../services/automotive_sync_service.dart'; // Add this import
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -167,6 +168,10 @@ class DatabaseHelper {
     
     // Schedule notification
     await NotificationService().scheduleReminderNotification(reminderWithId);
+    
+    // Sync to automotive
+    await AutomotiveSyncService().syncRemindersToAutomotive();
+    print('Reminder synced to automotive after insert');
   }
 
   Future<void> updateReminder(Reminder reminder) async {
@@ -177,8 +182,13 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [reminder.id],
     );
+    
     // Reschedule the notification with potentially new details
     await NotificationService().scheduleReminderNotification(reminder);
+    
+    // Sync to automotive
+    await AutomotiveSyncService().syncRemindersToAutomotive();
+    print('Reminder synced to automotive after update');
   }
 
   // Add method to delete reminder and cancel notification
@@ -186,5 +196,9 @@ class DatabaseHelper {
     final db = await database;
     await db.delete('reminders', where: 'id = ?', whereArgs: [id]);
     await NotificationService().cancelReminderNotification(id);
+    
+    // Sync after deletion
+    await AutomotiveSyncService().syncRemindersToAutomotive();
+    print('Reminders synced to automotive after deletion');
   }
 }

@@ -8,6 +8,8 @@ import '../data/database_helper.dart';
 import '../data/models/medicine.dart';
 import '../data/models/reminder.dart';
 import '../services/notification_service.dart'; // Add this import
+import '../services/automotive_sync_service.dart'; // Add this import
+import '../widgets/bluetooth_sync_button.dart'; // Add this import
 
 class CrearRecordatorioScreen extends StatefulWidget {
   final Reminder? reminderToEdit;
@@ -168,6 +170,10 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Bluetooth Sync Section - Add this
+            BluetoothSyncButton(),
+            SizedBox(height: 24),
+            
             // Time Picker
             _buildTimePickerSection(),
             SizedBox(height: 24),
@@ -232,7 +238,7 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
         ),
       ),
       bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: -1, // No item is selected
+        currentIndex: -1,
         onTap: _onNavTap,
       ),
     );
@@ -315,36 +321,62 @@ class _CrearRecordatorioScreenState extends State<CrearRecordatorioScreen> {
       height: 50,
       child: ElevatedButton(
         onPressed: () async {
-          final reminder = Reminder(
-            id: widget.reminderToEdit?.id, // Keep the ID for updates
-            medicineName: selectedMedication,
-            time:
-                "${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}",
-            doseCount: dosisCount,
-            doseUnit: dosisUnit,
-            doseType: dosisType,
-            timing: selectedTiming?.toString().split('.').last,
-            duration: duration,
-            durationType: durationType,
+          // Show loading indicator
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => Center(
+              child: CircularProgressIndicator(),
+            ),
           );
 
-          if (widget.reminderToEdit == null) {
-            await _dbHelper.insertReminder(reminder);
-          } else {
-            await _dbHelper.updateReminder(reminder);
-          }
-
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  widget.reminderToEdit == null
-                      ? 'Recordatorio guardado y notificación programada'
-                      : 'Recordatorio actualizado',
-                ),
-              ),
+          try {
+            final reminder = Reminder(
+              id: widget.reminderToEdit?.id, // Keep the ID for updates
+              medicineName: selectedMedication,
+              time:
+                  "${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}",
+              doseCount: dosisCount,
+              doseUnit: dosisUnit,
+              doseType: dosisType,
+              timing: selectedTiming?.toString().split('.').last,
+              duration: duration,
+              durationType: durationType,
             );
-            Navigator.pop(context, true); // Return true to indicate success
+
+            if (widget.reminderToEdit == null) {
+              await _dbHelper.insertReminder(reminder);
+            } else {
+              await _dbHelper.updateReminder(reminder);
+            }
+
+            // Close loading dialog
+            Navigator.of(context).pop();
+
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    widget.reminderToEdit == null
+                        ? 'Recordatorio guardado y sincronizado'
+                        : 'Recordatorio actualizado y sincronizado',
+                  ),
+                ),
+              );
+              Navigator.pop(context, true); // Return true to indicate success
+            }
+          } catch (e) {
+            // Close loading dialog
+            Navigator.of(context).pop();
+            
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error al guardar recordatorio: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
           }
         },
         style: ElevatedButton.styleFrom(

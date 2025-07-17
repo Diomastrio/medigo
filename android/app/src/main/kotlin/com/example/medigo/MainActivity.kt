@@ -8,6 +8,7 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.example.medigo/automotive"
+    private val BLUETOOTH_CHANNEL = "com.example.medigo/bluetooth"
     private var isAutomotiveMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,6 +26,19 @@ class MainActivity : FlutterActivity() {
             when (call.method) {
                 "isAutomotive" -> {
                     result.success(isAutomotiveMode)
+                }
+                else -> {
+                    result.notImplemented()
+                }
+            }
+        }
+        
+        // Setup Bluetooth sync channel
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, BLUETOOTH_CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "startBluetoothServer" -> {
+                    // Start Bluetooth server for automotive mode
+                    result.success(true)
                 }
                 else -> {
                     result.notImplemented()
